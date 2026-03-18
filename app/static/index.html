@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>舌頭即時分析系統</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+    <div x-data="app()" x-init="initWebSocket()">
+        <!-- Header -->
+        <header class="header">
+            <h1>舌頭即時分析系統</h1>
+            <div class="status" :class="wsConnected ? 'connected' : 'disconnected'">
+                <span class="status-dot"></span>
+                <span x-text="wsConnected ? '已連線' : '未連線'"></span>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <h2>上傳影像</h2>
+                <div class="upload-zone"
+                     @dragover.prevent="dragover = true"
+                     @dragleave="dragover = false"
+                     @drop.prevent="handleDrop($event)"
+                     :class="{ 'dragover': dragover }">
+                    <p>拖放影像到此處，或</p>
+                    <label class="upload-btn">
+                        選擇檔案
+                        <input type="file" multiple accept="image/*"
+                               @change="handleFiles($event)" hidden>
+                    </label>
+                    <p class="hint">支援 JPG、PNG、BMP、TIFF 格式（可多選）</p>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section x-show="processing || steps.length > 0" class="progress-section">
+                <h2>處理進度</h2>
+                <div class="pipeline-steps">
+                    <template x-for="step in steps" :key="step.name">
+                        <div class="step" :class="step.status">
+                            <span class="step-icon" x-text="step.status === 'done' ? '✓' : step.status === 'running' ? '⟳' : '○'"></span>
+                            <span x-text="step.label"></span>
+                        </div>
+                    </template>
+                </div>
+                <div x-show="processing" class="processing-indicator">處理中...</div>
+            </section>
+
+            <!-- Results Section -->
+            <section x-show="Object.keys(resultImages).length > 0" class="results-section">
+                <h2>處理結果</h2>
+
+                <!-- Image Grid -->
+                <div class="image-grid">
+                    <!-- Front Images -->
+                    <template x-for="(src, key) in resultImages" :key="key">
+                        <div class="image-card">
+                            <h3 x-text="formatImageLabel(key)"></h3>
+                            <img :src="src" :alt="key">
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Analysis Results -->
+                <div x-show="Object.keys(analysisResults).length > 0" class="analysis-panel">
+                    <h3>分析數據</h3>
+                    <template x-for="(value, key) in analysisResults" :key="key">
+                        <div class="result-item" x-show="key !== '_progress'">
+                            <strong x-text="formatStepName(key)"></strong>
+                            <pre x-text="JSON.stringify(value, null, 2)"></pre>
+                        </div>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Session Info -->
+            <div x-show="sessionId" class="session-info">
+                Session: <span x-text="sessionId"></span>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
