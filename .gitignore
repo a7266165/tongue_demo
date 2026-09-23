@@ -10,6 +10,9 @@ build/
 .env
 *.env.local
 
+# Models (large, not for a public repo)
+models/
+
 # Data (runtime)
 data/incoming/
 data/processed/
